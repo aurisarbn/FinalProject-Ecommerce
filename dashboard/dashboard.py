@@ -3,18 +3,18 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
 
-# Set style for seaborn
+# Set seaborn style
 sns.set(style='dark')
 
-# Load the dataset from the gzipped CSV
-csv_file_path = "dashboard/all_data.csv.gz"  # Ganti dengan nama file CSV terkompresi Anda
+# Load the dataset
+csv_file_path = "dashboard/all_data.csv.gz"  # Ganti dengan path file CSV kamu
 all_df = pd.read_csv(csv_file_path, compression='gzip')
 
 # Convert relevant columns to datetime
 datetime_columns = [
     "order_purchase_timestamp",
     "order_delivered_customer_date",
-    "order_estimated_delivery_date"  # Include this for late delivery calculation
+    "order_estimated_delivery_date"
 ]
 for column in datetime_columns:
     all_df[column] = pd.to_datetime(all_df[column])
@@ -28,125 +28,68 @@ all_df['late_delivery'] = all_df['order_delivered_customer_date'] > all_df['orde
 # Start Streamlit app
 st.sidebar.image("dashboard/logo.png", use_column_width=True)
 
-st.header('Dashboard Penjualan')
+st.header('Geoanalysis E-Commerce Dashboard')
 
-# Visualisasi metode pembayaran
-st.subheader('Metode Pembayaran')
-payment_counts = all_df['payment_type'].value_counts()
+# 1. Distribusi Pelanggan Berdasarkan Wilayah
+st.subheader('Distribusi Pelanggan Berdasarkan Wilayah')
+customer_distribution = all_df['customer_state'].value_counts().reset_index()
+customer_distribution.columns = ['State', 'Number of Customers']
 fig, ax = plt.subplots()
-sns.barplot(x=payment_counts.index, y=payment_counts.values, palette="Blues", ax=ax)
-ax.set_title("Jumlah Transaksi per Metode Pembayaran", fontsize=12)
-ax.set_xlabel("Metode Pembayaran", fontsize=10)
-ax.set_ylabel("Jumlah Transaksi", fontsize=10)
-plt.subplots_adjust(bottom=0.15)
-st.pyplot(fig)
-
-# Visualisasi rata-rata pengiriman per wilayah
-st.subheader('Rata-rata Waktu Pengiriman per Wilayah')
-average_delivery_time = all_df.groupby('customer_state')['delivery_time'].mean().reset_index()
-fig, ax = plt.subplots()
-sns.barplot(x='customer_state', y='delivery_time', data=average_delivery_time, color='skyblue', ax=ax, width=0.5)
-ax.set_title("Rata-rata Waktu Pengiriman per Wilayah", fontsize=12)
-ax.set_xlabel("Wilayah", fontsize=10)
-ax.set_ylabel("Waktu Pengiriman (hari)", fontsize=10)
+sns.barplot(x='State', y='Number of Customers', data=customer_distribution, ax=ax, palette='coolwarm')
+ax.set_title('Distribusi Pelanggan Berdasarkan Wilayah', fontsize=12)
+ax.set_xlabel('Wilayah', fontsize=10)
+ax.set_ylabel('Jumlah Pelanggan', fontsize=10)
 ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontsize=9)
-plt.subplots_adjust(bottom=0.15)
+plt.tight_layout()
 st.pyplot(fig)
 
-# Visualisasi rata-rata nilai pembayaran per wilayah
+# 2. Rata-rata Nilai Pembayaran per Wilayah
 st.subheader('Rata-rata Nilai Pembayaran per Wilayah')
 average_payment_value = all_df.groupby('customer_state')['payment_value'].mean().reset_index()
 fig, ax = plt.subplots()
-sns.barplot(x='customer_state', y='payment_value', data=average_payment_value, color='lightgreen', ax=ax, width=0.5)
-ax.set_title("Rata-rata Nilai Pembayaran per Wilayah", fontsize=12)
-ax.set_xlabel("Wilayah", fontsize=10)
-ax.set_ylabel("Nilai Pembayaran Rata-rata", fontsize=10)
+sns.barplot(x='customer_state', y='payment_value', data=average_payment_value, palette='viridis', ax=ax)
+ax.set_title('Rata-rata Nilai Pembayaran per Wilayah', fontsize=12)
+ax.set_xlabel('Wilayah', fontsize=10)
+ax.set_ylabel('Nilai Pembayaran Rata-rata (Rp)', fontsize=10)
 ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontsize=9)
-plt.subplots_adjust(bottom=0.15)
+plt.tight_layout()
 st.pyplot(fig)
 
-# Visualisasi skor ulasan
-st.subheader('Skor Ulasan')
-review_scores = all_df['review_score'].value_counts()
+# 3. Rata-rata Waktu Pengiriman per Wilayah
+st.subheader('Rata-rata Waktu Pengiriman per Wilayah')
+average_delivery_time = all_df.groupby('customer_state')['delivery_time'].mean().reset_index()
 fig, ax = plt.subplots()
-sns.barplot(x=review_scores.index, y=review_scores.values, palette="Blues", ax=ax)
-ax.set_title("Jumlah Ulasan per Skor", fontsize=12)
-ax.set_xlabel("Skor Ulasan", fontsize=10)
-ax.set_ylabel("Jumlah Ulasan", fontsize=10)
-plt.subplots_adjust(bottom=0.15)
+sns.barplot(x='customer_state', y='delivery_time', data=average_delivery_time, palette='Blues', ax=ax)
+ax.set_title('Rata-rata Waktu Pengiriman per Wilayah', fontsize=12)
+ax.set_xlabel('Wilayah', fontsize=10)
+ax.set_ylabel('Waktu Pengiriman (hari)', fontsize=10)
+ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontsize=9)
+plt.tight_layout()
 st.pyplot(fig)
 
-# Visualisasi pengiriman yang telat
-st.subheader('Pengiriman yang Telat')
+# 4. Jumlah Pengiriman yang Telat per Wilayah
+st.subheader('Jumlah Pengiriman yang Telat per Wilayah')
 late_deliveries = all_df[all_df['late_delivery']]
-late_counts = late_deliveries['customer_state'].value_counts()
+late_counts = late_deliveries['customer_state'].value_counts().reset_index()
+late_counts.columns = ['State', 'Late Deliveries']
 fig, ax = plt.subplots()
-sns.barplot(x=late_counts.index, y=late_counts.values, color='red', ax=ax, width=0.5)
-ax.set_title("Jumlah Pengiriman yang Telat per Wilayah", fontsize=12)
-ax.set_xlabel("Wilayah", fontsize=10)
-ax.set_ylabel("Jumlah Pengiriman yang Telat", fontsize=10)
+sns.barplot(x='State', y='Late Deliveries', data=late_counts, palette='Reds', ax=ax)
+ax.set_title('Jumlah Pengiriman yang Telat per Wilayah', fontsize=12)
+ax.set_xlabel('Wilayah', fontsize=10)
+ax.set_ylabel('Jumlah Pengiriman yang Telat', fontsize=10)
 ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontsize=9)
-plt.subplots_adjust(bottom=0.15)
-st.pyplot(fig)
-
-# Tambahkan Analisis RFM
-
-# Recency: Number of days since the last purchase
-latest_order_date = all_df['order_purchase_timestamp'].max()
-rfm_recency = all_df.groupby('customer_unique_id').agg({
-    'order_purchase_timestamp': lambda x: (latest_order_date - x.max()).days
-}).reset_index()
-rfm_recency.columns = ['customer_unique_id', 'recency']
-
-# Frequency: Number of orders per customer
-rfm_frequency = all_df.groupby('customer_unique_id').agg({
-    'order_id': 'count'
-}).reset_index()
-rfm_frequency.columns = ['customer_unique_id', 'frequency']
-
-# Monetary: Total value spent per customer
-rfm_monetary = all_df.groupby('customer_unique_id').agg({
-    'payment_value': 'sum'
-}).reset_index()
-rfm_monetary.columns = ['customer_unique_id', 'monetary']
-
-# Merge the three RFM metrics into one DataFrame
-rfm_df = rfm_recency.merge(rfm_frequency, on='customer_unique_id')
-rfm_df = rfm_df.merge(rfm_monetary, on='customer_unique_id')
-
-# Tampilkan Analisis RFM di Streamlit
-
-st.subheader('Analisis RFM')
-
-# Visualisasi Recency
-st.subheader('Distribusi Recency')
-fig, ax = plt.subplots()
-sns.histplot(rfm_df['recency'], bins=20, kde=False, color='skyblue', ax=ax)
-ax.set_title('Distribusi Recency (Jumlah Hari Sejak Pembelian Terakhir)', fontsize=12)
-ax.set_xlabel('Recency (Hari)', fontsize=10)
-ax.set_ylabel('Jumlah Pelanggan', fontsize=10)
 plt.tight_layout()
 st.pyplot(fig)
 
-# Visualisasi Frequency
-st.subheader('Distribusi Frequency')
-fig, ax = plt.subplots()
-sns.histplot(rfm_df['frequency'], bins=20, kde=False, color='green', ax=ax)
-ax.set_title('Distribusi Frequency (Jumlah Transaksi per Pelanggan)', fontsize=12)
-ax.set_xlabel('Frequency', fontsize=10)
-ax.set_ylabel('Jumlah Pelanggan', fontsize=10)
-plt.tight_layout()
-st.pyplot(fig)
+# Tambahkan informasi persentase pengiriman yang terlambat dan rata-rata waktu pengiriman
+st.subheader('Informasi Pengiriman')
+total_orders = len(all_df)
+late_deliveries_count = len(all_df[all_df['late_delivery']])
+late_delivery_percentage = (late_deliveries_count / total_orders) * 100
+average_delivery_days = all_df['delivery_time'].mean()
 
-# Visualisasi Monetary
-st.subheader('Distribusi Monetary')
-fig, ax = plt.subplots()
-sns.histplot(rfm_df['monetary'], bins=20, kde=False, color='orange', ax=ax)
-ax.set_title('Distribusi Monetary (Total Nilai Transaksi per Pelanggan)', fontsize=12)
-ax.set_xlabel('Monetary (Rupiah)', fontsize=10)
-ax.set_ylabel('Jumlah Pelanggan', fontsize=10)
-plt.tight_layout()
-st.pyplot(fig)
+st.write(f"Persentase Pengiriman yang Telat: {late_delivery_percentage:.2f}%")
+st.write(f"Rata-rata Waktu Pengiriman: {average_delivery_days:.2f} hari")
 
 # Footer
 st.caption('Copyright (c) Aurisa Rabina 2024')
