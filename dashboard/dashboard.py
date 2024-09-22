@@ -1,67 +1,94 @@
 import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
+import seaborn as sns
 import streamlit as st
 
-# Set style untuk seaborn
-sns.set(style='whitegrid')
+# Set style for seaborn
+sns.set(style='dark')
 
-# Load dataset
-csv_file_path = "dashboard/all_data.csv.gz"  # Ubah sesuai lokasi file
+# Load the dataset from the gzipped CSV
+csv_file_path = "dashboard/all_data.csv.gz"  # Ganti dengan nama file CSV terkompresi Anda
+
 all_df = pd.read_csv(csv_file_path, compression='gzip')
 
-# Convert columns to datetime format
+# Convert relevant columns to datetime
 datetime_columns = [
     "order_purchase_timestamp",
     "order_delivered_customer_date",
-    "order_estimated_delivery_date"
+    "order_estimated_delivery_date"  # Include this for late delivery calculation
 ]
 for column in datetime_columns:
     all_df[column] = pd.to_datetime(all_df[column])
 
-# Menghitung waktu pengiriman dalam hari
+# Calculate delivery time
 all_df['delivery_time'] = (all_df['order_delivered_customer_date'] - all_df['order_purchase_timestamp']).dt.days
 
-# Menghitung persentase pengiriman yang terlambat
+# Calculate late deliveries
 all_df['late_delivery'] = all_df['order_delivered_customer_date'] > all_df['order_estimated_delivery_date']
-late_delivery_percent = (all_df['late_delivery'].mean() * 100).round(2)
-
-# Rata-rata waktu pengiriman
-mean_delivery_time = all_df['delivery_time'].mean().round(2)
 
 # Start Streamlit app
 st.sidebar.image("dashboard/logo.png", use_column_width=True)
-st.header('Geoanalysis - E-commerce')
 
-# Visualisasi rata-rata waktu pengiriman per wilayah
-st.subheader('Average Delivery Time by State')
+st.header('Dashboard Penjualan')
+
+# Visualisasi metode pembayaran
+st.subheader('Metode Pembayaran')
+payment_counts = all_df['payment_type'].value_counts()
+fig, ax = plt.subplots()
+sns.barplot(x=payment_counts.index, y=payment_counts.values, palette="Blues", ax=ax)
+ax.set_title("Jumlah Transaksi per Metode Pembayaran", fontsize=12)
+ax.set_xlabel("Metode Pembayaran", fontsize=10)
+ax.set_ylabel("Jumlah Transaksi", fontsize=10)
+plt.subplots_adjust(bottom=0.15)
+st.pyplot(fig)
+
+# Visualisasi rata-rata pengiriman per wilayah
+st.subheader('Rata-rata Waktu Pengiriman per Wilayah')
 average_delivery_time = all_df.groupby('customer_state')['delivery_time'].mean().reset_index()
 fig, ax = plt.subplots()
-sns.barplot(x='customer_state', y='delivery_time', data=average_delivery_time, color='skyblue', ax=ax, width=0.6)
-ax.set_title("Average Delivery Time by State", fontsize=12)
-ax.set_xlabel("State", fontsize=10)
-ax.set_ylabel("Average Delivery Time (days)", fontsize=10)
-ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right')
-plt.tight_layout()
+sns.barplot(x='customer_state', y='delivery_time', data=average_delivery_time, color='skyblue', ax=ax, width=0.5)
+ax.set_title("Rata-rata Waktu Pengiriman per Wilayah", fontsize=12)
+ax.set_xlabel("Wilayah", fontsize=10)
+ax.set_ylabel("Waktu Pengiriman (hari)", fontsize=10)
+ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontsize=9)
+plt.subplots_adjust(bottom=0.15)
 st.pyplot(fig)
 
-# Visualisasi persentase pengiriman terlambat
-st.subheader('Late Deliveries by State')
-late_deliveries_by_state = all_df[all_df['late_delivery']].groupby('customer_state').size().reset_index(name='late_count')
-late_deliveries_by_state['late_percent'] = (late_deliveries_by_state['late_count'] / 
-                                            all_df['customer_state'].value_counts() * 100).round(2).reset_index(drop=True)
-
+# Visualisasi rata-rata nilai pembayaran per wilayah
+st.subheader('Rata-rata Nilai Pembayaran per Wilayah')
+average_payment_value = all_df.groupby('customer_state')['payment_value'].mean().reset_index()
 fig, ax = plt.subplots()
-sns.barplot(x='customer_state', y='late_percent', data=late_deliveries_by_state, color='salmon', ax=ax, width=0.6)
-ax.set_title("Late Delivery Percentage by State", fontsize=12)
-ax.set_xlabel("State", fontsize=10)
-ax.set_ylabel("Late Delivery Percentage (%)", fontsize=10)
-ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right')
-plt.tight_layout()
+sns.barplot(x='customer_state', y='payment_value', data=average_payment_value, color='lightgreen', ax=ax, width=0.5)
+ax.set_title("Rata-rata Nilai Pembayaran per Wilayah", fontsize=12)
+ax.set_xlabel("Wilayah", fontsize=10)
+ax.set_ylabel("Nilai Pembayaran Rata-rata", fontsize=10)
+ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontsize=9)
+plt.subplots_adjust(bottom=0.15)
 st.pyplot(fig)
 
-# Display metrics
-st.metric("Average Delivery Time", f"{mean_delivery_time} days")
-st.metric("Late Delivery Percentage", f"{late_delivery_percent}%")
+# Visualisasi skor ulasan
+st.subheader('Skor Ulasan')
+review_scores = all_df['review_score'].value_counts()
+fig, ax = plt.subplots()
+sns.barplot(x=review_scores.index, y=review_scores.values, palette="Blues", ax=ax)
+ax.set_title("Jumlah Ulasan per Skor", fontsize=12)
+ax.set_xlabel("Skor Ulasan", fontsize=10)
+ax.set_ylabel("Jumlah Ulasan", fontsize=10)
+plt.subplots_adjust(bottom=0.15)
+st.pyplot(fig)
 
-st.caption('Analysis by Aurisa Rabina 2024')
+# Visualisasi pengiriman yang telat
+st.subheader('Pengiriman yang Telat')
+late_deliveries = all_df[all_df['late_delivery']]
+late_counts = late_deliveries['customer_state'].value_counts()
+fig, ax = plt.subplots()
+sns.barplot(x=late_counts.index, y=late_counts.values, color='red', ax=ax, width=0.5)
+ax.set_title("Jumlah Pengiriman yang Telat per Wilayah", fontsize=12)
+ax.set_xlabel("Wilayah", fontsize=10)
+ax.set_ylabel("Jumlah Pengiriman yang Telat", fontsize=10)
+ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontsize=9)
+plt.subplots_adjust(bottom=0.15)
+st.pyplot(fig)
+
+# Footer
+st.caption('Copyright (c) Aurisa Rabina 2024')
