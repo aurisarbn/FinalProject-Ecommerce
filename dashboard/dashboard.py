@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
+from datetime import datetime
 
 # Set style for seaborn
 sns.set(style='dark')
@@ -102,6 +103,42 @@ ax.text(1, late_deliveries + 10, "8.1%", color='black', ha='center')  # Set fixe
 
 plt.subplots_adjust(bottom=0.15)
 st.pyplot(fig)
+
+# Analisis RFM
+st.header('Analisis RFM Pelanggan')
+
+# Hitung tanggal terakhir
+current_date = all_df['order_purchase_timestamp'].max() + pd.Timedelta(days=1)
+
+# Hitung RFM
+rfm_df = all_df.groupby('customer_unique_id').agg({
+    'order_purchase_timestamp': lambda x: (current_date - x.max()).days,
+    'order_id': 'count',
+    'payment_value': 'sum'
+}).reset_index()
+
+# Ubah nama kolom
+rfm_df.columns = ['customer_unique_id', 'Recency', 'Frequency', 'Monetary']
+
+# Segmentasi Pelanggan
+rfm_df['R_score'] = pd.qcut(rfm_df['Recency'], 4, labels=[4, 3, 2, 1])  # 1 = paling baru
+rfm_df['F_score'] = pd.qcut(rfm_df['Frequency'], 4, labels=[1, 2, 3, 4])  # 4 = paling sering
+rfm_df['M_score'] = pd.qcut(rfm_df['Monetary'], 4, labels=[1, 2, 3, 4])  # 4 = nilai tertinggi
+
+# Hitung RFM Total Score
+rfm_df['RFM_Score'] = rfm_df[['R_score', 'F_score', 'M_score']].sum(axis=1)
+
+# Visualisasi RFM
+fig, ax = plt.subplots()
+sns.histplot(rfm_df['RFM_Score'], bins=12, kde=True, ax=ax)
+ax.set_title('Distribusi RFM Score')
+ax.set_xlabel('RFM Score')
+ax.set_ylabel('Frekuensi')
+st.pyplot(fig)
+
+# Tampilkan RFM DataFrame
+st.subheader('Data RFM')
+st.dataframe(rfm_df)
 
 # Footer
 st.caption('Copyright (c) Aurisa Rabina 2024')
