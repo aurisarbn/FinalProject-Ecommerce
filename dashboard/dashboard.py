@@ -35,7 +35,7 @@ st.header('Dashboard Penjualan')
 st.subheader('Metode Pembayaran')
 payment_counts = all_df['payment_type'].value_counts()
 fig, ax = plt.subplots()
-sns.barplot(x=payment_counts.index, y=payment_counts.values, palette="Set2", ax=ax)  # Changed palette to Set2
+sns.barplot(x=payment_counts.index, y=payment_counts.values, palette="Set2", ax=ax)
 ax.set_title("Jumlah Transaksi per Metode Pembayaran", fontsize=12)
 ax.set_xlabel("Metode Pembayaran", fontsize=10)
 ax.set_ylabel("Jumlah Transaksi", fontsize=10)
@@ -84,11 +84,17 @@ st.subheader('Pengiriman yang Telat')
 late_deliveries = all_df[all_df['late_delivery']]
 late_counts = late_deliveries['customer_state'].value_counts()
 late_percentage = (late_counts / all_df['customer_state'].value_counts()) * 100  # Calculate percentage
+
 fig, ax = plt.subplots()
 sns.barplot(x=late_counts.index, y=late_counts.values, color='red', ax=ax, width=0.5)
 ax.set_title("Jumlah Pengiriman yang Telat per Wilayah", fontsize=12)
 ax.set_xlabel("Wilayah", fontsize=10)
 ax.set_ylabel("Jumlah Pengiriman yang Telat", fontsize=10)
+
+# Add percentage text on top of each bar
+for i, v in enumerate(late_counts.values):
+    ax.text(i, v + 0.5, f"{late_percentage[i]:.1f}%", color='black', ha='center')
+
 ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontsize=9)
 plt.subplots_adjust(bottom=0.15)
 st.pyplot(fig)
