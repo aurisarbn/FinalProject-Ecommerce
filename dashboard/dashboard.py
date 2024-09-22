@@ -2,14 +2,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
-from datetime import datetime
 
 # Set style for seaborn
 sns.set(style='dark')
 
 # Load the dataset from the gzipped CSV
 csv_file_path = "dashboard/all_data.csv.gz"  # Ganti dengan nama file CSV terkompresi Anda
-
 all_df = pd.read_csv(csv_file_path, compression='gzip')
 
 # Convert relevant columns to datetime
@@ -48,11 +46,11 @@ st.subheader('Rata-rata Waktu Pengiriman per Wilayah')
 average_delivery_time = all_df.groupby('customer_state')['delivery_time'].mean().reset_index()
 fig, ax = plt.subplots()
 sns.barplot(x='customer_state', y='delivery_time', data=average_delivery_time, color='skyblue', ax=ax, width=0.5)
-ax.axhline(12, color='orange', linestyle='--', label='Rata-rata Pengiriman (12 hari)')  # Average delivery line
+ax.axhline(12, color='orange', linestyle='--', label='Rata-rata Pengiriman (12 hari)')
 ax.set_title("Rata-rata Waktu Pengiriman per Wilayah", fontsize=12)
 ax.set_xlabel("Wilayah", fontsize=10)
 ax.set_ylabel("Waktu Pengiriman (hari)", fontsize=10)
-ax.legend()  # Add legend for the average line
+ax.legend()
 ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontsize=9)
 plt.subplots_adjust(bottom=0.15)
 st.pyplot(fig)
@@ -91,7 +89,7 @@ comparison_df = pd.DataFrame({
 })
 
 fig, ax = plt.subplots()
-sns.barplot(x='Status', y='Jumlah', data=comparison_df, palette=['green', 'red'], ax=ax)  # Set colors
+sns.barplot(x='Status', y='Jumlah', data=comparison_df, palette=['green', 'red'], ax=ax)
 ax.set_title("Perbandingan Pengiriman Terlambat dan Tepat Waktu", fontsize=12)
 ax.set_xlabel("Status Pengiriman", fontsize=10)
 ax.set_ylabel("Jumlah Pengiriman", fontsize=10)
@@ -120,10 +118,19 @@ rfm_df = all_df.groupby('customer_unique_id').agg({
 # Ubah nama kolom
 rfm_df.columns = ['customer_unique_id', 'Recency', 'Frequency', 'Monetary']
 
+# Periksa nilai unik dalam Frequency
+st.write("Nilai unik dalam Frequency:", rfm_df['Frequency'].unique())
+
 # Segmentasi Pelanggan
-rfm_df['R_score'] = pd.qcut(rfm_df['Recency'], 4, labels=[4, 3, 2, 1])  # 1 = paling baru
-rfm_df['F_score'] = pd.qcut(rfm_df['Frequency'], 4, labels=[1, 2, 3, 4])  # 4 = paling sering
-rfm_df['M_score'] = pd.qcut(rfm_df['Monetary'], 4, labels=[1, 2, 3, 4])  # 4 = nilai tertinggi
+if rfm_df['Frequency'].nunique() > 1:
+    rfm_df['R_score'] = pd.qcut(rfm_df['Recency'], 4, labels=[4, 3, 2, 1])  # 1 = paling baru
+    rfm_df['F_score'] = pd.qcut(rfm_df['Frequency'], 4, labels=[1, 2, 3, 4])  # 4 = paling sering
+    rfm_df['M_score'] = pd.qcut(rfm_df['Monetary'], 4, labels=[1, 2, 3, 4])  # 4 = nilai tertinggi
+else:
+    # Jika tidak ada variasi, beri nilai tetap
+    rfm_df['R_score'] = 1
+    rfm_df['F_score'] = 1
+    rfm_df['M_score'] = 1
 
 # Hitung RFM Total Score
 rfm_df['RFM_Score'] = rfm_df[['R_score', 'F_score', 'M_score']].sum(axis=1)
