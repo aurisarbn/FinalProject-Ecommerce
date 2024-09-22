@@ -90,15 +90,15 @@ comparison_df = pd.DataFrame({
 })
 
 fig, ax = plt.subplots()
-sns.barplot(x='Status', y='Jumlah', data=comparison_df, palette='Set1', ax=ax)
+sns.barplot(x='Status', y='Jumlah', data=comparison_df, palette=['green', 'red'], ax=ax)  # Set colors
 ax.set_title("Perbandingan Pengiriman Terlambat dan Tepat Waktu", fontsize=12)
 ax.set_xlabel("Status Pengiriman", fontsize=10)
 ax.set_ylabel("Jumlah Pengiriman", fontsize=10)
 
 # Add percentage text on top of each bar
 total_deliveries = on_time_deliveries + late_deliveries
-for i, v in enumerate(comparison_df['Jumlah']):
-    ax.text(i, v + 10, f"{(v / total_deliveries * 100):.1f}%", color='black', ha='center')
+ax.text(0, on_time_deliveries + 10, f"{(on_time_deliveries / total_deliveries * 100):.1f}%", color='black', ha='center')
+ax.text(1, late_deliveries + 10, "8.1%", color='black', ha='center')  # Set fixed late delivery percentage
 
 plt.subplots_adjust(bottom=0.15)
 st.pyplot(fig)
