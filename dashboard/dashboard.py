@@ -27,7 +27,7 @@ all_df['delivery_time'] = (all_df['order_delivered_customer_date'] - all_df['ord
 all_df['late_delivery'] = all_df['order_delivered_customer_date'] > all_df['order_estimated_delivery_date']
 
 # Start Streamlit app
-st.sidebar.image("logo.png", use_column_width=True)
+st.sidebar.image("dashboard/logo.png", use_column_width=True)
 
 st.header('Dashboard Penjualan')
 
