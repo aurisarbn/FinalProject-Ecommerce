@@ -79,23 +79,27 @@ ax.set_ylabel("Jumlah Ulasan", fontsize=10)
 plt.subplots_adjust(bottom=0.15)
 st.pyplot(fig)
 
-# Visualisasi pengiriman yang telat
-st.subheader('Pengiriman yang Telat')
-late_deliveries = all_df[all_df['late_delivery']]
-late_counts = late_deliveries['customer_state'].value_counts()
-late_percentage = (late_counts / all_df['customer_state'].value_counts()) * 100  # Calculate percentage
+# Visualisasi perbandingan pengiriman terlambat dan tepat waktu
+st.subheader('Perbandingan Pengiriman Terlambat dan Tepat Waktu')
+on_time_deliveries = all_df[~all_df['late_delivery']].shape[0]
+late_deliveries = all_df[all_df['late_delivery']].shape[0]
+
+comparison_df = pd.DataFrame({
+    'Status': ['Tepat Waktu', 'Terlambat'],
+    'Jumlah': [on_time_deliveries, late_deliveries]
+})
 
 fig, ax = plt.subplots()
-sns.barplot(x=late_counts.index, y=late_counts.values, color='red', ax=ax, width=0.5)
-ax.set_title("Jumlah Pengiriman yang Telat per Wilayah", fontsize=12)
-ax.set_xlabel("Wilayah", fontsize=10)
-ax.set_ylabel("Jumlah Pengiriman yang Telat", fontsize=10)
+sns.barplot(x='Status', y='Jumlah', data=comparison_df, palette='Set1', ax=ax)
+ax.set_title("Perbandingan Pengiriman Terlambat dan Tepat Waktu", fontsize=12)
+ax.set_xlabel("Status Pengiriman", fontsize=10)
+ax.set_ylabel("Jumlah Pengiriman", fontsize=10)
 
 # Add percentage text on top of each bar
-for i, v in enumerate(late_counts.values):
-    ax.text(i, v + 0.5, f"{late_percentage[i]:.1f}%", color='black', ha='center')
+total_deliveries = on_time_deliveries + late_deliveries
+for i, v in enumerate(comparison_df['Jumlah']):
+    ax.text(i, v + 10, f"{(v / total_deliveries * 100):.1f}%", color='black', ha='center')
 
-ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontsize=9)
 plt.subplots_adjust(bottom=0.15)
 st.pyplot(fig)
 
