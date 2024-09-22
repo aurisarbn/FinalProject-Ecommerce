@@ -3,15 +3,19 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
 
+# Set style for seaborn
 sns.set(style='dark')
 
-# Load the dataset
-all_df = pd.read_csv("all_data.csv")
+# Load the dataset from the gzipped CSV
+csv_file_path = "all_data.csv.gz"  # Ganti dengan nama file CSV terkompresi Anda
+
+all_df = pd.read_csv(csv_file_path, compression='gzip')
 
 # Convert relevant columns to datetime
 datetime_columns = [
     "order_purchase_timestamp",
-    "order_delivered_customer_date"
+    "order_delivered_customer_date",
+    "order_estimated_delivery_date"  # Include this for late delivery calculation
 ]
 for column in datetime_columns:
     all_df[column] = pd.to_datetime(all_df[column])
@@ -86,4 +90,5 @@ ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right
 plt.subplots_adjust(bottom=0.15)
 st.pyplot(fig)
 
+# Footer
 st.caption('Copyright (c) Aurisa Rabina 2024')
