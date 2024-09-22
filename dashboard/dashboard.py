@@ -7,7 +7,7 @@ import streamlit as st
 sns.set(style='dark')
 
 # Load the dataset from the gzipped CSV
-csv_file_path = "all_data.csv.gz"  # Ganti dengan nama file CSV terkompresi Anda
+csv_file_path = "dashboard/all_data.csv.gz"  # Ganti dengan nama file CSV terkompresi Anda
 
 all_df = pd.read_csv(csv_file_path, compression='gzip')
 
