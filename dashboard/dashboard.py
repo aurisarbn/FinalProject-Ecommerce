@@ -15,7 +15,7 @@ all_df = pd.read_csv(csv_file_path, compression='gzip')
 datetime_columns = [
     "order_purchase_timestamp",
     "order_delivered_customer_date",
-    "order_estimated_delivery_date"  # Include this for late delivery calculation
+    "order_estimated_delivery_date"
 ]
 for column in datetime_columns:
     all_df[column] = pd.to_datetime(all_df[column])
@@ -35,7 +35,7 @@ st.header('Dashboard Penjualan')
 st.subheader('Metode Pembayaran')
 payment_counts = all_df['payment_type'].value_counts()
 fig, ax = plt.subplots()
-sns.barplot(x=payment_counts.index, y=payment_counts.values, palette="Blues", ax=ax)
+sns.barplot(x=payment_counts.index, y=payment_counts.values, palette="Set2", ax=ax)  # Changed palette to Set2
 ax.set_title("Jumlah Transaksi per Metode Pembayaran", fontsize=12)
 ax.set_xlabel("Metode Pembayaran", fontsize=10)
 ax.set_ylabel("Jumlah Transaksi", fontsize=10)
@@ -47,9 +47,11 @@ st.subheader('Rata-rata Waktu Pengiriman per Wilayah')
 average_delivery_time = all_df.groupby('customer_state')['delivery_time'].mean().reset_index()
 fig, ax = plt.subplots()
 sns.barplot(x='customer_state', y='delivery_time', data=average_delivery_time, color='skyblue', ax=ax, width=0.5)
+ax.axhline(12, color='orange', linestyle='--', label='Rata-rata Pengiriman (12 hari)')  # Average delivery line
 ax.set_title("Rata-rata Waktu Pengiriman per Wilayah", fontsize=12)
 ax.set_xlabel("Wilayah", fontsize=10)
 ax.set_ylabel("Waktu Pengiriman (hari)", fontsize=10)
+ax.legend()  # Add legend for the average line
 ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontsize=9)
 plt.subplots_adjust(bottom=0.15)
 st.pyplot(fig)
@@ -81,6 +83,7 @@ st.pyplot(fig)
 st.subheader('Pengiriman yang Telat')
 late_deliveries = all_df[all_df['late_delivery']]
 late_counts = late_deliveries['customer_state'].value_counts()
+late_percentage = (late_counts / all_df['customer_state'].value_counts()) * 100  # Calculate percentage
 fig, ax = plt.subplots()
 sns.barplot(x=late_counts.index, y=late_counts.values, color='red', ax=ax, width=0.5)
 ax.set_title("Jumlah Pengiriman yang Telat per Wilayah", fontsize=12)
