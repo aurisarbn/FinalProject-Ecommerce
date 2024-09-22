@@ -8,7 +8,6 @@ sns.set(style='dark')
 
 # Load the dataset from the gzipped CSV
 csv_file_path = "dashboard/all_data.csv.gz"  # Ganti dengan nama file CSV terkompresi Anda
-
 all_df = pd.read_csv(csv_file_path, compression='gzip')
 
 # Convert relevant columns to datetime
@@ -88,6 +87,65 @@ ax.set_xlabel("Wilayah", fontsize=10)
 ax.set_ylabel("Jumlah Pengiriman yang Telat", fontsize=10)
 ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontsize=9)
 plt.subplots_adjust(bottom=0.15)
+st.pyplot(fig)
+
+# Tambahkan Analisis RFM
+
+# Recency: Number of days since the last purchase
+latest_order_date = all_df['order_purchase_timestamp'].max()
+rfm_recency = all_df.groupby('customer_unique_id').agg({
+    'order_purchase_timestamp': lambda x: (latest_order_date - x.max()).days
+}).reset_index()
+rfm_recency.columns = ['customer_unique_id', 'recency']
+
+# Frequency: Number of orders per customer
+rfm_frequency = all_df.groupby('customer_unique_id').agg({
+    'order_id': 'count'
+}).reset_index()
+rfm_frequency.columns = ['customer_unique_id', 'frequency']
+
+# Monetary: Total value spent per customer
+rfm_monetary = all_df.groupby('customer_unique_id').agg({
+    'payment_value': 'sum'
+}).reset_index()
+rfm_monetary.columns = ['customer_unique_id', 'monetary']
+
+# Merge the three RFM metrics into one DataFrame
+rfm_df = rfm_recency.merge(rfm_frequency, on='customer_unique_id')
+rfm_df = rfm_df.merge(rfm_monetary, on='customer_unique_id')
+
+# Tampilkan Analisis RFM di Streamlit
+
+st.subheader('Analisis RFM')
+
+# Visualisasi Recency
+st.subheader('Distribusi Recency')
+fig, ax = plt.subplots()
+sns.histplot(rfm_df['recency'], bins=20, kde=False, color='skyblue', ax=ax)
+ax.set_title('Distribusi Recency (Jumlah Hari Sejak Pembelian Terakhir)', fontsize=12)
+ax.set_xlabel('Recency (Hari)', fontsize=10)
+ax.set_ylabel('Jumlah Pelanggan', fontsize=10)
+plt.tight_layout()
+st.pyplot(fig)
+
+# Visualisasi Frequency
+st.subheader('Distribusi Frequency')
+fig, ax = plt.subplots()
+sns.histplot(rfm_df['frequency'], bins=20, kde=False, color='green', ax=ax)
+ax.set_title('Distribusi Frequency (Jumlah Transaksi per Pelanggan)', fontsize=12)
+ax.set_xlabel('Frequency', fontsize=10)
+ax.set_ylabel('Jumlah Pelanggan', fontsize=10)
+plt.tight_layout()
+st.pyplot(fig)
+
+# Visualisasi Monetary
+st.subheader('Distribusi Monetary')
+fig, ax = plt.subplots()
+sns.histplot(rfm_df['monetary'], bins=20, kde=False, color='orange', ax=ax)
+ax.set_title('Distribusi Monetary (Total Nilai Transaksi per Pelanggan)', fontsize=12)
+ax.set_xlabel('Monetary (Rupiah)', fontsize=10)
+ax.set_ylabel('Jumlah Pelanggan', fontsize=10)
+plt.tight_layout()
 st.pyplot(fig)
 
 # Footer
