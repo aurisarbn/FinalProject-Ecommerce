@@ -6,10 +6,10 @@ import streamlit as st
 # Set style for seaborn
 sns.set(style='dark')
 
-# Load the dataset from the gzipped CSV
-csv_file_path = "dashboard/all_data.csv.gz"  # Ganti dengan nama file CSV terkompresi Anda
+# Load the dataset from the CSV
+csv_file_path = "dashboard/all_data.csv"  # Ganti dengan nama file CSV Anda
 
-all_df = pd.read_csv(csv_file_path, compression='gzip')
+all_df = pd.read_csv(csv_file_path)
 
 # Convert relevant columns to datetime
 datetime_columns = [
