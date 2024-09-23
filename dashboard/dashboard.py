@@ -7,7 +7,7 @@ import streamlit as st
 sns.set(style='dark')
 
 # Load the dataset from the CSV
-csv_file_path = "dashboard/all_data.csv"  # Ganti dengan nama file CSV Anda
+csv_file_path = "all_data.csv"  # Ganti dengan nama file CSV Anda
 
 all_df = pd.read_csv(csv_file_path)
 
